@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option go_package = "pkg/grpc";
+
+package myapp;
+
+service OrderService{
+	rpc ChangeOrderPrice(OrderRequest) returns (OrderResponse);
+}
+
+message OrderRequest {
+	uint64 id = 1;
+	uint64 priceAfterChange = 2;
+	OrderChangeReason changeReason = 3;
+}
+
+message OrderResponse{
+	uint32 code = 1;
+	string message = 2;
+}
+
+enum OrderChangeReason {
+	MERCHANT = 0;
+	CUSTOMER = 1;
+}
