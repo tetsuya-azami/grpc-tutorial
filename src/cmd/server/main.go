@@ -9,7 +9,8 @@ import (
 	"os"
 	"os/signal"
 
-	hellopb "mygrpc/pkg/grpc"
+	hellopb "mygrpc/pkg/grpc/hello"
+	orderpb "mygrpc/pkg/grpc/order"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -31,6 +32,7 @@ func main() {
 	// 2. gRPCサーバーを作成
 	s := grpc.NewServer()
 	hellopb.RegisterGreetingServiceServer(s, NewMyServer())
+	orderpb.RegisterOrderServiceServer(s, NewMyServer())
 
 	reflection.Register(s)
 
@@ -53,6 +55,7 @@ func main() {
 
 type myServer struct {
 	hellopb.UnimplementedGreetingServiceServer
+	orderpb.UnimplementedOrderServiceServer
 }
 
 func (s *myServer) Hello(ctx context.Context, req *hellopb.HelloRequest) (*hellopb.HelloResponse, error) {
@@ -60,5 +63,12 @@ func (s *myServer) Hello(ctx context.Context, req *hellopb.HelloRequest) (*hello
 	// "Hello, [名前]!"というレスポンスを返す
 	return &hellopb.HelloResponse{
 		Message: fmt.Sprintf("Hello %s", req.GetName()),
+	}, nil
+}
+
+func (s *myServer) ChangeOrderPrice(ctx context.Context, req *orderpb.OrderRequest) (*orderpb.OrderResponse, error) {
+	return &orderpb.OrderResponse{
+		Code:    200,
+		Message: fmt.Sprintf("orderId: %d, priceAfterChange: %d, changeReason: %s", req.GetId(), req.GetPriceAfterChange(), req.GetChangeReason()),
 	}, nil
 }
