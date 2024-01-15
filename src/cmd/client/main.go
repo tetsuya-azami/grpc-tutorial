@@ -6,15 +6,19 @@ import (
 	"fmt"
 	"log"
 	hellopb "mygrpc/pkg/grpc/hello"
+	orderpb "mygrpc/pkg/grpc/order"
 	"os"
+	"strconv"
+	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
-	scanner *bufio.Scanner
-	client  hellopb.GreetingServiceClient
+	scanner           *bufio.Scanner
+	helloClient       hellopb.GreetingServiceClient
+	orderChangeClient orderpb.OrderServiceClient
 )
 
 func main() {
@@ -37,21 +41,22 @@ func main() {
 	}
 	defer conn.Close()
 
-	// 3. gRPCクライアントを生成
-	client = hellopb.NewGreetingServiceClient(conn)
-
 	for {
-		fmt.Println("1: send Request")
-		fmt.Println("2: exit")
+		fmt.Println("1: send Request to Hello")
+		fmt.Println("2: send Request to ChangeOrderPrice")
+		fmt.Println("3: exit")
 		fmt.Println("please enter >")
 
 		scanner.Scan()
 		in := scanner.Text()
 		switch in {
 		case "1":
-			Hello()
+			Hello(conn)
 
 		case "2":
+			ChangeOrderPrice(conn)
+
+		case "3":
 			fmt.Println("bye")
 			goto M
 		}
@@ -59,20 +64,65 @@ func main() {
 M:
 }
 
-func Hello() {
+func Hello(conn *grpc.ClientConn) {
 	fmt.Println("Please enter your name.")
 	scanner.Scan()
 	name := scanner.Text()
+
+	// helloClientを作成
+	helloClient = hellopb.NewGreetingServiceClient(conn)
 
 	req := &hellopb.HelloRequest{
 		Name: name,
 	}
 
-	res, err := client.Hello(context.Background(), req)
+	res, err := helloClient.Hello(context.Background(), req)
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println(res.GetMessage())
 		fmt.Println()
 	}
+}
+
+func ChangeOrderPrice(conn *grpc.ClientConn) {
+	fmt.Println("Please enter order id.")
+	scanner.Scan()
+	idUint64 := ParseUint(scanner.Text())
+
+	fmt.Println("Please enter order priceAfterChange.")
+	scanner.Scan()
+	priceAfterChange := ParseUint(scanner.Text())
+
+	fmt.Println("Please enter changeReason.")
+	scanner.Scan()
+	changeReason, err := strconv.Atoi(strings.TrimSpace(scanner.Text()))
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// orderChangeClientを作成
+	orderChangeClient = orderpb.NewOrderServiceClient(conn)
+
+	req := &orderpb.OrderRequest{
+		Id:               idUint64,
+		PriceAfterChange: priceAfterChange,
+		ChangeReason:     orderpb.OrderChangeReason(changeReason),
+	}
+
+	res, err := orderChangeClient.ChangeOrderPrice(context.Background(), req)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Printf("code: %d, message: %s", res.GetCode(), res.GetMessage())
+		fmt.Println()
+	}
+}
+
+func ParseUint(source string) uint64 {
+	idUint64, err := strconv.ParseUint(source, 10, 64)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return idUint64
 }
