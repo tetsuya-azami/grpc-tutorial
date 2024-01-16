@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
 	hellopb "mygrpc/pkg/grpc/hello"
 	orderpb "mygrpc/pkg/grpc/order"
@@ -58,12 +59,31 @@ type myServer struct {
 	orderpb.UnimplementedOrderServiceServer
 }
 
+// Unary RPC
 func (s *myServer) Hello(ctx context.Context, req *hellopb.HelloRequest) (*hellopb.HelloResponse, error) {
 	// リクエストからnameフィールドを取り出して
 	// "Hello, [名前]!"というレスポンスを返す
 	return &hellopb.HelloResponse{
 		Message: fmt.Sprintf("Hello %s", req.GetName()),
 	}, nil
+}
+
+// Server Stream RPC
+func (s *myServer) HelloServerStream(req *hellopb.HelloRequest, stream hellopb.GreetingService_HelloServerStreamServer) error {
+	resCount := 5
+
+	// 5回レスポンスを返す
+	for i := 0; i < resCount; i++ {
+		// streamのSendメソッドでレスポンスを送信
+		if err := stream.Send(&hellopb.HelloResponse{
+			Message: fmt.Sprintf("[%d]Hello, %s!", i, req.GetName()),
+		}); err != nil {
+			return err
+		}
+		time.Sleep(time.Second * 1)
+	}
+
+	return nil
 }
 
 func (s *myServer) ChangeOrderPrice(ctx context.Context, req *orderpb.OrderRequest) (*orderpb.OrderResponse, error) {
