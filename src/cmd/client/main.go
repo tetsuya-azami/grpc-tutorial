@@ -47,7 +47,8 @@ func main() {
 		fmt.Println("1: send Request to Hello")
 		fmt.Println("2: send Request to HelloServerStream")
 		fmt.Println("3: send Request to ChangeOrderPrice")
-		fmt.Println("4: exit")
+		fmt.Println("4: send Request to ChangeMultipleOrderPrice")
+		fmt.Println("5: exit")
 		fmt.Println("please enter >")
 
 		scanner.Scan()
@@ -63,6 +64,9 @@ func main() {
 			ChangeOrderPrice(conn)
 
 		case "4":
+			ChangeMultipleOrderPrice(conn)
+
+		case "5":
 			fmt.Println("bye")
 			goto M
 		}
@@ -153,6 +157,46 @@ func ChangeOrderPrice(conn *grpc.ClientConn) {
 	} else {
 		fmt.Printf("code: %d, message: %s", res.GetCode(), res.GetMessage())
 		fmt.Println()
+	}
+}
+
+func ChangeMultipleOrderPrice(conn *grpc.ClientConn) {
+	fmt.Println("Please enter order id.")
+	scanner.Scan()
+	id := ParseUint(scanner.Text())
+
+	fmt.Println("Please enter order priceAfterChange.")
+	scanner.Scan()
+	priceAfterChange := ParseUint(scanner.Text())
+
+	fmt.Println("Please enter order changeReason.")
+	scanner.Scan()
+	changeReason := scanner.Text()
+
+	// orderChangeClientを作成
+	orderChangeClient := orderpb.NewOrderServiceClient(conn)
+
+	stream, err := orderChangeClient.ChangeMultipleOrderPrice(context.Background(), &orderpb.OrderRequest{
+		Id:               id,
+		PriceAfterChange: priceAfterChange,
+		ChangeReason:     orderpb.OrderChangeReason(ParseUint(changeReason)),
+	})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	for {
+		res, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			fmt.Println("all responses has already been received.")
+			break
+		}
+
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(res)
 	}
 }
 
