@@ -6,6 +6,7 @@ package myapp;
 
 service OrderService{
 	rpc ChangeOrderPrice(OrderRequest) returns (OrderResponse);
+	rpc ChangeMultipleOrderPrice(OrderRequest) returns (stream OrderResponse);
 }
 
 message OrderRequest {
