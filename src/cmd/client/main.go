@@ -3,7 +3,9 @@ package main
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	hellopb "mygrpc/pkg/grpc/hello"
 	orderpb "mygrpc/pkg/grpc/order"
@@ -43,8 +45,9 @@ func main() {
 
 	for {
 		fmt.Println("1: send Request to Hello")
-		fmt.Println("2: send Request to ChangeOrderPrice")
-		fmt.Println("3: exit")
+		fmt.Println("2: send Request to HelloServerStream")
+		fmt.Println("3: send Request to ChangeOrderPrice")
+		fmt.Println("4: exit")
 		fmt.Println("please enter >")
 
 		scanner.Scan()
@@ -54,9 +57,12 @@ func main() {
 			Hello(conn)
 
 		case "2":
-			ChangeOrderPrice(conn)
+			HelloServerStream(conn)
 
 		case "3":
+			ChangeOrderPrice(conn)
+
+		case "4":
 			fmt.Println("bye")
 			goto M
 		}
@@ -82,6 +88,37 @@ func Hello(conn *grpc.ClientConn) {
 	} else {
 		fmt.Println(res.GetMessage())
 		fmt.Println()
+	}
+}
+
+func HelloServerStream(conn *grpc.ClientConn) {
+	fmt.Println("Please enter your name.")
+	scanner.Scan()
+	name := scanner.Text()
+
+	req := &hellopb.HelloRequest{
+		Name: name,
+	}
+
+	// helloStreamClientを作成
+	client := hellopb.NewGreetingServiceClient(conn)
+	streamClient, err := client.HelloServerStream(context.Background(), req)
+
+	if err != nil {
+		return
+	}
+
+	for {
+		res, err := streamClient.Recv()
+		if errors.Is(err, io.EOF) {
+			fmt.Println("all responses has already been received.")
+			break
+		}
+
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(res)
 	}
 }
 
