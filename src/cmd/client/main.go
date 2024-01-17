@@ -43,6 +43,11 @@ func main() {
 	}
 	defer conn.Close()
 
+	// helloClientを作成
+	helloClient = hellopb.NewGreetingServiceClient(conn)
+	// orderChangeClientを作成
+	orderChangeClient = orderpb.NewOrderServiceClient(conn)
+
 	for {
 		fmt.Println("1: send Request to Hello")
 		fmt.Println("2: send Request to HelloServerStream")
@@ -55,16 +60,16 @@ func main() {
 		in := scanner.Text()
 		switch in {
 		case "1":
-			Hello(conn)
+			Hello()
 
 		case "2":
-			HelloServerStream(conn)
+			HelloServerStream()
 
 		case "3":
-			ChangeOrderPrice(conn)
+			ChangeOrderPrice()
 
 		case "4":
-			ChangeMultipleOrderPrice(conn)
+			ChangeMultipleOrderPrice()
 
 		case "5":
 			fmt.Println("bye")
@@ -74,13 +79,10 @@ func main() {
 M:
 }
 
-func Hello(conn *grpc.ClientConn) {
+func Hello() {
 	fmt.Println("Please enter your name.")
 	scanner.Scan()
 	name := scanner.Text()
-
-	// helloClientを作成
-	helloClient = hellopb.NewGreetingServiceClient(conn)
 
 	req := &hellopb.HelloRequest{
 		Name: name,
@@ -95,7 +97,7 @@ func Hello(conn *grpc.ClientConn) {
 	}
 }
 
-func HelloServerStream(conn *grpc.ClientConn) {
+func HelloServerStream() {
 	fmt.Println("Please enter your name.")
 	scanner.Scan()
 	name := scanner.Text()
@@ -104,9 +106,7 @@ func HelloServerStream(conn *grpc.ClientConn) {
 		Name: name,
 	}
 
-	// helloStreamClientを作成
-	client := hellopb.NewGreetingServiceClient(conn)
-	streamClient, err := client.HelloServerStream(context.Background(), req)
+	streamClient, err := helloClient.HelloServerStream(context.Background(), req)
 
 	if err != nil {
 		return
@@ -126,7 +126,7 @@ func HelloServerStream(conn *grpc.ClientConn) {
 	}
 }
 
-func ChangeOrderPrice(conn *grpc.ClientConn) {
+func ChangeOrderPrice() {
 	fmt.Println("Please enter order id.")
 	scanner.Scan()
 	idUint64 := ParseUint(scanner.Text())
@@ -141,9 +141,6 @@ func ChangeOrderPrice(conn *grpc.ClientConn) {
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	// orderChangeClientを作成
-	orderChangeClient = orderpb.NewOrderServiceClient(conn)
 
 	req := &orderpb.OrderRequest{
 		Id:               idUint64,
@@ -160,7 +157,7 @@ func ChangeOrderPrice(conn *grpc.ClientConn) {
 	}
 }
 
-func ChangeMultipleOrderPrice(conn *grpc.ClientConn) {
+func ChangeMultipleOrderPrice() {
 	fmt.Println("Please enter order id.")
 	scanner.Scan()
 	id := ParseUint(scanner.Text())
@@ -172,9 +169,6 @@ func ChangeMultipleOrderPrice(conn *grpc.ClientConn) {
 	fmt.Println("Please enter order changeReason.")
 	scanner.Scan()
 	changeReason := scanner.Text()
-
-	// orderChangeClientを作成
-	orderChangeClient := orderpb.NewOrderServiceClient(conn)
 
 	stream, err := orderChangeClient.ChangeMultipleOrderPrice(context.Background(), &orderpb.OrderRequest{
 		Id:               id,
