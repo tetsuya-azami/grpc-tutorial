@@ -92,3 +92,19 @@ func (s *myServer) ChangeOrderPrice(ctx context.Context, req *orderpb.OrderReque
 		Message: fmt.Sprintf("orderId: %d, priceAfterChange: %d, changeReason: %s", req.GetId(), req.GetPriceAfterChange(), req.GetChangeReason()),
 	}, nil
 }
+
+func (s *myServer) ChangeMultipleOrderPrice(req *orderpb.OrderRequest, stream orderpb.OrderService_ChangeMultipleOrderPriceServer) error {
+	resCount := 5
+
+	for i := 0; i < resCount; i++ {
+		if err := stream.Send(&orderpb.OrderResponse{
+			Code:    200,
+			Message: fmt.Sprintf("[%d], orderId: %d, priceAfterChange: %d, changeReason: %s", i, req.GetId(), req.GetPriceAfterChange(), req.GetChangeReason()),
+		}); err != nil {
+			return err
+		}
+		time.Sleep(time.Second * 1)
+	}
+
+	return nil
+}
