@@ -106,6 +106,27 @@ func (s *myServer) HelloClientStream(server hellopb.GreetingService_HelloClientS
 	}
 }
 
+func (s *myServer) HelloBiStream(stream hellopb.GreetingService_HelloBiStreamServer) error {
+	for {
+		req, err := stream.Recv()
+
+		if errors.Is(err, io.EOF) {
+			fmt.Println("all requests have been received")
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if err := stream.Send(&hellopb.HelloResponse{
+			Message: fmt.Sprintf("Hello, %s!", req.GetName()),
+		}); err != nil {
+			return err
+		}
+	}
+}
+
 func (s *myServer) ChangeOrderPrice(ctx context.Context, req *orderpb.OrderRequest) (*orderpb.OrderResponse, error) {
 	return &orderpb.OrderResponse{
 		Code:    200,

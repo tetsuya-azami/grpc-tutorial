@@ -52,9 +52,10 @@ func main() {
 		fmt.Println("1: send Request to Hello")
 		fmt.Println("2: send Request to HelloServerStream")
 		fmt.Println("3: send Request to HelloClientStream")
-		fmt.Println("4: send Request to ChangeOrderPrice")
-		fmt.Println("5: send Request to ChangeMultipleOrderPrice")
-		fmt.Println("6: exit")
+		fmt.Println("4: HelloBiStream")
+		fmt.Println("5: send Request to ChangeOrderPrice")
+		fmt.Println("6: send Request to ChangeMultipleOrderPrice")
+		fmt.Println("7: exit")
 		fmt.Println("please enter >")
 
 		scanner.Scan()
@@ -70,12 +71,15 @@ func main() {
 			HelloClientStream()
 
 		case "4":
-			ChangeOrderPrice()
+			HelloBiStream()
 
 		case "5":
-			ChangeMultipleOrderPrice()
+			ChangeOrderPrice()
 
 		case "6":
+			ChangeMultipleOrderPrice()
+
+		case "7":
 			fmt.Println("bye")
 			goto M
 		}
@@ -158,6 +162,60 @@ func HelloClientStream() {
 		fmt.Println(err)
 	} else {
 		fmt.Println(res.GetMessage())
+	}
+}
+
+func HelloBiStream() {
+	stream, err := helloClient.HelloBiStream(context.Background())
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	var sendEnd, receiveEnd bool
+	sendCount := 0
+	for !sendEnd && !receiveEnd {
+		// 送信処理
+		if !sendEnd {
+			fmt.Printf("please enter name[%d]\n", sendCount)
+			scanner.Scan()
+			name := scanner.Text()
+
+			if err := stream.Send(&hellopb.HelloRequest{
+				Name: name,
+			}); err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			sendCount++
+
+			if sendCount == 5 {
+				sendEnd = true
+				if err := stream.CloseSend(); err != nil {
+					fmt.Println(err)
+					return
+				}
+			}
+		}
+
+		// 受信処理
+		if !receiveEnd {
+			res, err := stream.Recv()
+
+			if errors.Is(err, io.EOF) {
+				fmt.Println("all responses has already been received.")
+				sendEnd = true
+				break
+			}
+
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println(res)
+			}
+		}
 	}
 }
 
