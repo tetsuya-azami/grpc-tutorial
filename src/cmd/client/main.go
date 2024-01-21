@@ -13,8 +13,10 @@ import (
 	"strconv"
 	"strings"
 
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -53,9 +55,10 @@ func main() {
 		fmt.Println("2: send Request to HelloServerStream")
 		fmt.Println("3: send Request to HelloClientStream")
 		fmt.Println("4: HelloBiStream")
-		fmt.Println("5: send Request to ChangeOrderPrice")
-		fmt.Println("6: send Request to ChangeMultipleOrderPrice")
-		fmt.Println("7: exit")
+		fmt.Println("5: HelloError")
+		fmt.Println("6: send Request to ChangeOrderPrice")
+		fmt.Println("7: send Request to ChangeMultipleOrderPrice")
+		fmt.Println("8: exit")
 		fmt.Println("please enter >")
 
 		scanner.Scan()
@@ -74,12 +77,15 @@ func main() {
 			HelloBiStream()
 
 		case "5":
-			ChangeOrderPrice()
+			HelloError()
 
 		case "6":
-			ChangeMultipleOrderPrice()
+			ChangeOrderPrice()
 
 		case "7":
+			ChangeMultipleOrderPrice()
+
+		case "8":
 			fmt.Println("bye")
 			goto M
 		}
@@ -217,6 +223,43 @@ func HelloBiStream() {
 			}
 		}
 	}
+}
+
+func HelloError() {
+	fmt.Println("Please enter your name.")
+	scanner.Scan()
+	name := scanner.Text()
+
+	req := &hellopb.HelloRequest{
+		Name: name,
+	}
+
+	res, err := helloClient.HelloError(context.Background(), req)
+
+	if err != nil {
+		if stat, ok := status.FromError(err); ok {
+			fmt.Printf("Code: %s\n", stat.Code())
+			fmt.Printf("Message: %s\n", stat.Message())
+
+			for _, detail := range stat.Details() {
+				switch t := detail.(type) {
+				case *errdetails.BadRequest:
+					fmt.Printf("BadRequest: %s\n", t)
+				case *errdetails.DebugInfo:
+					fmt.Printf("DebugInfo: %s\n", t)
+				case *errdetails.RetryInfo:
+					fmt.Printf("RetryInfo: %s\n", t)
+				default:
+					fmt.Printf("Unexpected type: %s\n", t)
+				}
+			}
+		} else {
+			fmt.Println(err)
+		}
+	}
+
+	fmt.Println(res.GetMessage())
+	fmt.Println()
 }
 
 func ChangeOrderPrice() {

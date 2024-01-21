@@ -15,8 +15,11 @@ import (
 	hellopb "mygrpc/pkg/grpc/hello"
 	orderpb "mygrpc/pkg/grpc/order"
 
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 )
 
 func NewMyServer() *myServer {
@@ -125,6 +128,14 @@ func (s *myServer) HelloBiStream(stream hellopb.GreetingService_HelloBiStreamSer
 			return err
 		}
 	}
+}
+
+func (s *myServer) HelloError(ctx context.Context, req *hellopb.HelloRequest) (*hellopb.HelloResponse, error) {
+	stat := status.New(codes.Unknown, "unknown error")
+	stat, _ = stat.WithDetails(&errdetails.DebugInfo{
+		Detail: "ここにclient向けのstacktraceが入ってくるイメージ？",
+	})
+	return &hellopb.HelloResponse{}, stat.Err()
 }
 
 func (s *myServer) ChangeOrderPrice(ctx context.Context, req *orderpb.OrderRequest) (*orderpb.OrderResponse, error) {
