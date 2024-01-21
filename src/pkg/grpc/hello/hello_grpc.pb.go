@@ -23,6 +23,7 @@ const (
 	GreetingService_HelloServerStream_FullMethodName = "/myapp.GreetingService/HelloServerStream"
 	GreetingService_HelloClientStream_FullMethodName = "/myapp.GreetingService/HelloClientStream"
 	GreetingService_HelloBiStream_FullMethodName     = "/myapp.GreetingService/HelloBiStream"
+	GreetingService_HelloError_FullMethodName        = "/myapp.GreetingService/HelloError"
 )
 
 // GreetingServiceClient is the client API for GreetingService service.
@@ -37,6 +38,8 @@ type GreetingServiceClient interface {
 	HelloClientStream(ctx context.Context, opts ...grpc.CallOption) (GreetingService_HelloClientStreamClient, error)
 	// 双方向ストリーミングRPC
 	HelloBiStream(ctx context.Context, opts ...grpc.CallOption) (GreetingService_HelloBiStreamClient, error)
+	// エラー返却用RPC
+	HelloError(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloResponse, error)
 }
 
 type greetingServiceClient struct {
@@ -153,6 +156,15 @@ func (x *greetingServiceHelloBiStreamClient) Recv() (*HelloResponse, error) {
 	return m, nil
 }
 
+func (c *greetingServiceClient) HelloError(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloResponse, error) {
+	out := new(HelloResponse)
+	err := c.cc.Invoke(ctx, GreetingService_HelloError_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GreetingServiceServer is the server API for GreetingService service.
 // All implementations must embed UnimplementedGreetingServiceServer
 // for forward compatibility
@@ -165,6 +177,8 @@ type GreetingServiceServer interface {
 	HelloClientStream(GreetingService_HelloClientStreamServer) error
 	// 双方向ストリーミングRPC
 	HelloBiStream(GreetingService_HelloBiStreamServer) error
+	// エラー返却用RPC
+	HelloError(context.Context, *HelloRequest) (*HelloResponse, error)
 	mustEmbedUnimplementedGreetingServiceServer()
 }
 
@@ -183,6 +197,9 @@ func (UnimplementedGreetingServiceServer) HelloClientStream(GreetingService_Hell
 }
 func (UnimplementedGreetingServiceServer) HelloBiStream(GreetingService_HelloBiStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method HelloBiStream not implemented")
+}
+func (UnimplementedGreetingServiceServer) HelloError(context.Context, *HelloRequest) (*HelloResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HelloError not implemented")
 }
 func (UnimplementedGreetingServiceServer) mustEmbedUnimplementedGreetingServiceServer() {}
 
@@ -288,6 +305,24 @@ func (x *greetingServiceHelloBiStreamServer) Recv() (*HelloRequest, error) {
 	return m, nil
 }
 
+func _GreetingService_HelloError_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HelloRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GreetingServiceServer).HelloError(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GreetingService_HelloError_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GreetingServiceServer).HelloError(ctx, req.(*HelloRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GreetingService_ServiceDesc is the grpc.ServiceDesc for GreetingService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -298,6 +333,10 @@ var GreetingService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Hello",
 			Handler:    _GreetingService_Hello_Handler,
+		},
+		{
+			MethodName: "HelloError",
+			Handler:    _GreetingService_HelloError_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
