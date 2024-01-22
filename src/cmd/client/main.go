@@ -16,6 +16,7 @@ import (
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -102,10 +103,17 @@ func Hello() {
 		Name: name,
 	}
 
-	res, err := helloClient.Hello(context.Background(), req)
+	ctx := context.Background()
+	md := metadata.New(map[string]string{"type": "unary", "from": "client"})
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
+	var header, trailer metadata.MD
+	res, err := helloClient.Hello(ctx, req, grpc.Header(&header), grpc.Trailer(&trailer))
 	if err != nil {
 		fmt.Println(err)
 	} else {
+		fmt.Println(header)
+		fmt.Println(trailer)
 		fmt.Println(res.GetMessage())
 		fmt.Println()
 	}
@@ -172,7 +180,10 @@ func HelloClientStream() {
 }
 
 func HelloBiStream() {
-	stream, err := helloClient.HelloBiStream(context.Background())
+	ctx := context.Background()
+	md := metadata.New(map[string]string{"type": "stream", "from": "client"})
+	ctx = metadata.NewOutgoingContext(ctx, md)
+	stream, err := helloClient.HelloBiStream(ctx)
 
 	if err != nil {
 		fmt.Println(err)
