@@ -1,5 +1,5 @@
 module "network" {
-  source         = "./modules/network"
+  source         = "github.com/tetsuya-azami/my-network-terraform-module/modules/my-easy-network-terraform-module"
   project_name   = "grpc-tutorial"
   vpc_cidr_block = "10.0.0.0/16"
   public_subnets = {
