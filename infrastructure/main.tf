@@ -1,5 +1,5 @@
 module "network" {
-  source         = "./network"
+  source         = "./modules/network"
   project_name   = "grpc-tutorial"
   vpc_cidr_block = "10.0.0.0/16"
   public_subnets = {
