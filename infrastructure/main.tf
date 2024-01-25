@@ -1,10 +1,6 @@
-locals {
-  project_name = "grpc-tutorial"
-}
-
 module "network" {
   source         = "github.com/tetsuya-azami/my-network-terraform-module/modules/my-easy-network-terraform-module"
-  project_name   = local.project_name
+  project_name   = var.project_name
   vpc_cidr_block = "10.0.0.0/16"
   public_subnets = {
     "10.0.1.0/24" = {
@@ -26,7 +22,7 @@ module "network" {
 
 module "alb" {
   source            = "./modules/alb"
-  project_name      = local.project_name
+  project_name      = var.project_name
   vpc_id            = module.network.vpc_id
   public_subnet_ids = module.network.public_subnet_ids
 }
