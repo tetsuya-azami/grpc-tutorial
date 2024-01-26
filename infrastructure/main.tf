@@ -26,3 +26,9 @@ module "alb" {
   vpc_id            = module.network.vpc_id
   public_subnet_ids = module.network.public_subnet_ids
 }
+
+module "route53" {
+  source       = "./modules/route53"
+  project_name = var.project_name
+  domain_name  = var.domain_name
+}
