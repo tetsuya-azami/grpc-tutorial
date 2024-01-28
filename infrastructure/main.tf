@@ -33,3 +33,9 @@ module "route53" {
   project_name = var.project_name
   domain_name  = var.domain_name
 }
+
+module "ecs" {
+  source       = "./modules/ecs"
+  project_name = var.project_name
+  image_tag    = "latest"
+}
