@@ -1,3 +1,8 @@
+variable "project_name" {
+  type        = string
+  description = "project name"
+}
+
 variable "vpc_id" {
   type        = string
   description = "vpc id"
@@ -8,7 +13,7 @@ variable "public_subnet_ids" {
   description = "public subnet ids"
 }
 
-variable "project_name" {
+variable "certificate_arn" {
   type        = string
-  description = "project name"
+  description = "certificate arn"
 }

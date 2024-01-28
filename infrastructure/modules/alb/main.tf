@@ -10,15 +10,29 @@ resource "aws_lb" "main" {
   }
 }
 
-# todo: add listener
-# resource "aws_lb_listener" "main" {
-#   load_balancer_arn = aws_lb.main.arn
-#   port              = "443"
-#   protocol          = "HTTPS"
-#   certificate_arn =
-# }
+resource "aws_lb_listener" "main" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "443"
+  protocol          = "HTTPS"
+  certificate_arn   = var.certificate_arn
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.back_containers.arn
+  }
+}
 
-# todo: add target group
+resource "aws_lb_target_group" "back_containers" {
+  name             = "${var.project_name}-lb-tg"
+  port             = 8080
+  protocol         = "HTTP"
+  protocol_version = "GRPC"
+  target_type      = "ip"
+  vpc_id           = var.vpc_id
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
 
 resource "aws_security_group" "alb" {
   name   = "${var.project_name}-alb-sg"
@@ -53,5 +67,3 @@ resource "aws_vpc_security_group_egress_rule" "alb_security_group_egress_rule" {
     Name = "${var.project_name}-alb-security-group-igress-rule"
   }
 }
-
-# todo: add acm certificate
