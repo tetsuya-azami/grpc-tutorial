@@ -118,7 +118,6 @@ resource "aws_vpc_endpoint" "s3" {
 }
 
 resource "aws_vpc_endpoint_route_table_association" "private_s3" {
-  for_each        = var.backend_container_subnet_ids
   vpc_endpoint_id = aws_vpc_endpoint.s3.id
   route_table_id  = var.route_table_id
 }
