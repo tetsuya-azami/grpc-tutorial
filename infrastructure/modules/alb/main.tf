@@ -5,6 +5,11 @@ resource "aws_lb" "main" {
   security_groups    = [aws_security_group.alb.id]
   subnets            = var.public_subnet_ids
 
+  access_logs {
+    bucket  = aws_s3_bucket.elb_access_log.id
+    enabled = true
+  }
+
   tags = {
     Name = "${var.project_name}-alb"
   }
@@ -66,4 +71,49 @@ resource "aws_vpc_security_group_egress_rule" "alb_security_group_egress_rule" {
   tags = {
     Name = "${var.project_name}-alb-security-group-igress-rule"
   }
+}
+
+data "aws_elb_service_account" "main" {}
+
+resource "aws_s3_bucket" "elb_access_log" {
+  bucket = "${var.project_name}-alb-access-log"
+
+  tags = {
+    Name = "${var.project_name}-alb-access-log"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "elb_access_log" {
+  bucket = aws_s3_bucket.elb_access_log.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# iam policy for elb logging to s3
+data "aws_iam_policy_document" "allow_elb_logging" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+    ]
+
+    resources = [
+      "${aws_s3_bucket.elb_access_log.arn}/*",
+    ]
+
+    principals {
+      identifiers = [
+        data.aws_elb_service_account.main.arn,
+      ]
+      type = "AWS"
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "allow_elb_logging" {
+  bucket = aws_s3_bucket.elb_access_log.id
+  policy = data.aws_iam_policy_document.allow_elb_logging.json
 }
