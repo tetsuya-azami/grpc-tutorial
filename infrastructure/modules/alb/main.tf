@@ -92,7 +92,7 @@ resource "aws_s3_bucket_public_access_block" "elb_access_log" {
   restrict_public_buckets = true
 }
 
-# iam policy for elb logging to s3
+# bucket policy for elb logging to s3
 data "aws_iam_policy_document" "allow_elb_logging" {
   statement {
     effect = "Allow"

@@ -45,3 +45,8 @@ module "ecs" {
   route_table_id               = module.network.private_route_table_id
   vpc_cidr_block               = module.network.vpc.cidr_block
 }
+
+module "athena" {
+  source       = "./modules/athena"
+  project_name = var.project_name
+}
