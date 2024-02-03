@@ -76,7 +76,8 @@ resource "aws_vpc_security_group_egress_rule" "alb_security_group_egress_rule" {
 data "aws_elb_service_account" "main" {}
 
 resource "aws_s3_bucket" "elb_access_log" {
-  bucket = "${var.project_name}-alb-access-log"
+  bucket        = "${var.project_name}-alb-access-log"
+  force_destroy = true
 
   tags = {
     Name = "${var.project_name}-alb-access-log"
