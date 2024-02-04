@@ -5,10 +5,10 @@ variable "project_name" {
 
 variable "database_name" {
   type        = string
-  description = "database name"
+  description = "athena database name"
 }
 
 variable "source_s3_location" {
   type        = string
-  description = "source s3 location"
+  description = "source s3 location which athena is querying from"
 }
