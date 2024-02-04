@@ -56,7 +56,7 @@ resource "aws_ecs_service" "back_containers" {
 
   network_configuration {
     subnets          = var.backend_container_subnet_ids
-    security_groups  = []
+    security_groups  = [aws_security_group.backend_containers.id]
     assign_public_ip = false
   }
 
