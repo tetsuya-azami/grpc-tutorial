@@ -1,5 +1,14 @@
 data "aws_caller_identity" "current" {}
 
+data "aws_route53_zone" "main" {
+  name = var.domain_name
+}
+
+data "aws_acm_certificate" "main" {
+  domain = var.domain_name
+  types  = ["AMAZON_ISSUED"]
+}
+
 module "network" {
   source         = "github.com/tetsuya-azami/my-network-terraform-module/modules/my-easy-network-terraform-module"
   project_name   = var.project_name
@@ -27,13 +36,7 @@ module "alb" {
   project_name      = var.project_name
   vpc_id            = module.network.vpc.id
   public_subnet_ids = module.network.public_subnet_ids
-  certificate_arn   = module.route53.certificate_arn
-}
-
-module "route53" {
-  source       = "./modules/route53"
-  project_name = var.project_name
-  domain_name  = var.domain_name
+  certificate_arn   = data.aws_acm_certificate.main.arn
 }
 
 module "ecs" {
