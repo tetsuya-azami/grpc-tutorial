@@ -34,6 +34,17 @@ resource "aws_lb_target_group" "back_containers" {
   target_type      = "ip"
   vpc_id           = var.vpc_id
 
+  health_check {
+    enabled             = true
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+    timeout             = 5
+    interval            = 5
+    matcher             = "0"
+    path                = "/grpc.health.v1.Health/Check"
+    port                = "traffic-port"
+  }
+
   lifecycle {
     create_before_destroy = true
   }

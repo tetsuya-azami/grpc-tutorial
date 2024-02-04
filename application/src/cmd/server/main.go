@@ -12,15 +12,18 @@ import (
 	"os/signal"
 	"time"
 
-	hellopb "mygrpc/pkg/grpc/hello"
-	orderpb "mygrpc/pkg/grpc/order"
-
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
+
+	hellopb "mygrpc/pkg/grpc/hello"
+	orderpb "mygrpc/pkg/grpc/order"
+
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 func NewMyServer() *myServer {
@@ -40,6 +43,10 @@ func main() {
 	s := grpc.NewServer()
 	hellopb.RegisterGreetingServiceServer(s, NewMyServer())
 	orderpb.RegisterOrderServiceServer(s, NewMyServer())
+
+	healthSrv := health.NewServer()
+	healthpb.RegisterHealthServer(s, healthSrv)
+	healthSrv.SetServingStatus("mygrpc", healthpb.HealthCheckResponse_SERVING)
 
 	reflection.Register(s)
 
