@@ -5,7 +5,7 @@ variable "project_name" {
 
 variable "image_tag" {
   type        = string
-  description = "image tag"
+  description = "image tag for task definition"
 }
 
 variable "target_group_arn" {
@@ -30,10 +30,10 @@ variable "backend_container_subnet_ids" {
 
 variable "alb_security_group_id" {
   type        = string
-  description = "alb security group id"
+  description = "referenced security group id of the backend containers"
 }
 
-variable "route_table_id" {
+variable "ecr_repository_url" {
   type        = string
-  description = "route table id"
+  description = "ecr repository url for task definition"
 }

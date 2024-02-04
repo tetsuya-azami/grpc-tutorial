@@ -39,16 +39,25 @@ module "alb" {
   certificate_arn   = data.aws_acm_certificate.main.arn
 }
 
+module "ecr" {
+  source                       = "./modules/ecr"
+  project_name                 = var.project_name
+  vpc_id                       = module.network.vpc.id
+  vpc_cidr_block               = module.network.vpc.cidr_block
+  backend_container_subnet_ids = module.network.private_subnet_ids
+  route_table_id               = module.network.private_route_table_id
+}
+
 module "ecs" {
   source                       = "./modules/ecs"
   project_name                 = var.project_name
   image_tag                    = "1"
   target_group_arn             = module.alb.target_group_arn
   vpc_id                       = module.network.vpc.id
+  vpc_cidr_block               = module.network.vpc.cidr_block
   backend_container_subnet_ids = module.network.private_subnet_ids
   alb_security_group_id        = module.alb.security_group_id
-  route_table_id               = module.network.private_route_table_id
-  vpc_cidr_block               = module.network.vpc.cidr_block
+  ecr_repository_url           = module.ecr.repository_url
 }
 
 module "athena" {
