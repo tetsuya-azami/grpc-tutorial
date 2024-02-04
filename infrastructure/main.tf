@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 module "network" {
   source         = "github.com/tetsuya-azami/my-network-terraform-module/modules/my-easy-network-terraform-module"
   project_name   = var.project_name
@@ -47,6 +49,8 @@ module "ecs" {
 }
 
 module "athena" {
-  source       = "./modules/athena"
-  project_name = var.project_name
+  source             = "./modules/athena"
+  project_name       = var.project_name
+  database_name      = "alb_access_logs"
+  source_s3_location = "s3://${module.alb.access_logs_bucket_name}/AWSLogs/${data.aws_caller_identity.current.account_id}/elasticloadbalancing/ap-northeast-1/"
 }

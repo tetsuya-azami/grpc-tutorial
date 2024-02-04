@@ -13,8 +13,24 @@ resource "aws_athena_workgroup" "main" {
   }
 }
 
+resource "aws_athena_database" "main" {
+  name   = var.database_name
+  bucket = aws_s3_bucket.athena-results.id
+}
+
+resource "aws_athena_named_query" "create_table" {
+  name      = "create_table"
+  workgroup = aws_athena_workgroup.main.id
+  database  = aws_athena_database.main.name
+  query = templatefile(
+    "${path.module}/sql/create_table.tftpl",
+    { source_s3_location = var.source_s3_location }
+  )
+}
+
 resource "aws_s3_bucket" "athena-results" {
-  bucket = "${var.project_name}-athena-results"
+  bucket        = "${var.project_name}-athena-results"
+  force_destroy = true
   tags = {
     Name = "athena-results"
   }
